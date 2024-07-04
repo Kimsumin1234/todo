@@ -18,7 +18,8 @@ env:
   EC2_HOST: ec2-43-202-96-53.ap-northeast-2.compute.amazonaws.com
   EC2_SSH_USER: ubuntu
   PRIVATE_KEY: ${{ secrets.EC2_SSH }}
-
+  
+# 변경된 사항 감지
 jobs:
   build-and-push-docker:
     runs-on: ubuntu-latest
@@ -37,9 +38,11 @@ jobs:
       - name: Set up application.properties
         run: echo "${{ secrets.DATABASE_INFO }}" > ./src/main/resources/application.properties
 
+# 메이븐으로 압축해주는 코드
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
-
+        run: mvn -B package --file pom.xml 
+        
+# 압축한걸 Docker 로 이미지화 시킴
       - name: Build the Docker image
         run: docker build . --file Dockerfile --tag ${{ env.DOCKER_IMAGE_NAME }}:latest
 
@@ -48,7 +51,8 @@ jobs:
 
       - name: Push the Docker image
         run: docker push ${{ env.DOCKER_IMAGE_NAME }}:latest
-
+        
+# 이미지화 된걸 EC2 에 배포
   deploy-to-ec2:
     needs: build-and-push-docker
     runs-on: ubuntu-latest
@@ -67,6 +71,7 @@ jobs:
               sudo docker stop $CONTAINER_ID
               sudo docker rm $CONTAINER_ID
             fi
-
+            
+            # 위에 작업들을 자동화 해줘
             sudo docker pull ${{ env.DOCKER_IMAGE_NAME }}            
             sudo docker run -d -p 8080:8080  ${{ env.DOCKER_IMAGE_NAME }}:latest
